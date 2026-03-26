@@ -237,6 +237,37 @@ function App() {
     a.click();
   };
 
+  const exportToCSV = () => {
+    if (selectedArticles.length === 0) {
+      alert("請先選擇至少一篇文獻");
+      return;
+    }
+    
+    const headers = ['PMID', 'Title', 'Authors', 'Year', 'Link', 'Abstract'];
+    const rows = selectedArticles.map(a => {
+      const escapeCsv = (str: string) => `"${str.replace(/"/g, '""')}"`;
+      return [
+        a.id,
+        escapeCsv(a.title),
+        escapeCsv(a.authors),
+        a.year,
+        escapeCsv(a.link),
+        escapeCsv(a.abstract)
+      ].join(',');
+    });
+    
+    const csvContent = [headers.join(','), ...rows].join('\n');
+    // Add UTF-8 BOM so Excel opens it correctly
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'ebm_selected_articles.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div id="app">
       <header className="app-header">
@@ -421,9 +452,14 @@ function App() {
                 {results.length > 0 && (
                   <div className="selection-summary" style={{ background: 'var(--card-bg)', padding: '15px', borderRadius: '8px', marginTop: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
                     <span>已選擇 <strong>{selectedArticles.length}</strong> 篇文獻進行分析</span>
-                    <button className="primary-btn" onClick={generateReport} disabled={selectedArticles.length === 0}>
-                      產生綜合實證評讀報告
-                    </button>
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                      <button className="secondary-btn" onClick={exportToCSV} disabled={selectedArticles.length === 0}>
+                        下載已選文獻 (CSV)
+                      </button>
+                      <button className="primary-btn" onClick={generateReport} disabled={selectedArticles.length === 0}>
+                        產生綜合實證評讀報告
+                      </button>
+                    </div>
                   </div>
                 )}
               </>
