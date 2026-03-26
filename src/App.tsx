@@ -42,6 +42,7 @@ function App() {
   const [results, setResults] = useState<Article[]>([]);
   const [selectedArticles, setSelectedArticles] = useState<Article[]>([]);
   const [yearLimit, setYearLimit] = useState<number>(5);
+  const [limitToTopJournals, setLimitToTopJournals] = useState<boolean>(false);
   const [suggestedStrategy, setSuggestedStrategy] = useState('');
   const [isModifyingStrategy, setIsModifyingStrategy] = useState(false);
 
@@ -125,12 +126,17 @@ function App() {
     setSelectedArticles([]);
     setSuggestedStrategy('');
 
+    let finalQuery = queryToUse;
+    if (limitToTopJournals) {
+      finalQuery = `(${finalQuery}) AND ("New England Journal of Medicine"[Journal] OR "JAMA"[Journal] OR "Cochrane Database Syst Rev"[Journal])`;
+    }
+
     try {
       const res = await fetch(`${API_BASE_URL}/api/search`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          query: queryToUse, 
+          query: finalQuery, 
           max_results: 15,
           year_limit: yearLimit 
         })
@@ -384,14 +390,25 @@ function App() {
               <h3>PubMed 搜尋字串</h3>
               <textarea rows={5} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}></textarea>
               
-              <div className="filter-options" style={{ marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <input 
-                  type="checkbox" 
-                  id="yearFilter" 
-                  checked={yearLimit === 5} 
-                  onChange={(e) => setYearLimit(e.target.checked ? 5 : 0)} 
-                />
-                <label htmlFor="yearFilter">僅搜尋近 5 年內的文獻 (Limit to last 5 years)</label>
+              <div className="filter-options" style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <input 
+                    type="checkbox" 
+                    id="yearFilter" 
+                    checked={yearLimit === 5} 
+                    onChange={(e) => setYearLimit(e.target.checked ? 5 : 0)} 
+                  />
+                  <label htmlFor="yearFilter">僅搜尋近 5 年內的文獻 (Limit to last 5 years)</label>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <input 
+                    type="checkbox" 
+                    id="journalFilter" 
+                    checked={limitToTopJournals} 
+                    onChange={(e) => setLimitToTopJournals(e.target.checked)} 
+                  />
+                  <label htmlFor="journalFilter">🌟 頂尖實證過濾：僅顯示 NEJM、JAMA、Cochrane 等權威醫學期刊</label>
+                </div>
               </div>
             </div>
             <div className="button-group">
