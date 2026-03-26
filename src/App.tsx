@@ -14,6 +14,7 @@ interface Article {
   year: string;
   abstract: string;
   link: string;
+  pub_type?: string;
 }
 
 interface ChatMessage {
@@ -442,27 +443,48 @@ function App() {
                     ) : null}
                   </div>
                 ) : (
-                  <div className="results-list">
-                    {results.map((res) => (
-                      <div key={res.id} className="article-card" style={{ display: 'flex', gap: '15px' }}>
-                        <div className="article-checkbox">
-                          <input 
-                            type="checkbox" 
-                            style={{ width: '20px', height: '20px', cursor: 'pointer' }}
-                            checked={selectedArticles.some(a => a.id === res.id)}
-                            onChange={() => toggleArticleSelection(res)}
-                          />
-                        </div>
-                        <div>
-                          <div className="article-title">{res.title} ({res.year})</div>
-                          <div className="article-authors">{res.authors}</div>
-                          <div className="article-abstract">{res.abstract}</div>
-                          <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-                            <button className="secondary-btn-sm" onClick={() => window.open(res.link, '_blank')}>開啟 PubMed</button>
+                  <div className="results-list" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                    {['Systematic Review / Meta-Analysis', 'Guidelines', 'RCT', 'Clinical Trial', 'Review', 'Other'].map(category => {
+                      const categoryResults = results.filter(r => (r.pub_type === category) || (!r.pub_type && category === 'Other'));
+                      if (categoryResults.length === 0) return null;
+                      
+                      return (
+                        <div key={category} className="result-category-group">
+                          <h3 style={{ borderBottom: '2px solid var(--primary-color)', paddingBottom: '0.5rem', marginBottom: '1rem', color: 'var(--primary-dark)' }}>
+                            {category === 'Systematic Review / Meta-Analysis' ? '🏆 系統性回顧 / 統合分析' :
+                             category === 'Guidelines' ? '📜 臨床指引' :
+                             category === 'RCT' ? '🏅 隨機對照試驗 (RCT)' :
+                             category === 'Clinical Trial' ? '📘 臨床試驗' :
+                             category === 'Review' ? '📖 文獻回顧' : '📄 其他觀察性研究'}
+                            <span style={{ fontSize: '0.8rem', fontWeight: 'normal', marginLeft: '10px', color: '#666' }}>({categoryResults.length} 篇)</span>
+                          </h3>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                            {categoryResults.map((res) => (
+                              <div key={res.id} className="article-card" style={{ display: 'flex', gap: '15px', borderLeft: `4px solid ${category === 'Systematic Review / Meta-Analysis' || category === 'RCT' ? 'var(--primary-color)' : '#ccc'}` }}>
+                                <div className="article-checkbox">
+                                  <input 
+                                    type="checkbox" 
+                                    style={{ width: '20px', height: '20px', cursor: 'pointer', marginTop: '5px' }}
+                                    checked={selectedArticles.some(a => a.id === res.id)}
+                                    onChange={() => toggleArticleSelection(res)}
+                                  />
+                                </div>
+                                <div style={{ flex: 1 }}>
+                                  <div className="article-title" style={{ fontSize: '1.1rem', fontWeight: '600', color: '#2c3e50', marginBottom: '4px' }}>
+                                    {res.title} ({res.year})
+                                  </div>
+                                  <div className="article-authors" style={{ fontSize: '0.9rem', color: '#555', marginBottom: '8px' }}>{res.authors}</div>
+                                  <div className="article-abstract" style={{ fontSize: '0.95rem', color: '#444', lineHeight: '1.5' }}>{res.abstract}</div>
+                                  <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                                    <button className="secondary-btn-sm" onClick={() => window.open(res.link, '_blank')}>開啟 PubMed全文</button>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
                 
